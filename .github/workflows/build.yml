@@ -1,0 +1,60 @@
+name: llama-android-arm64
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: llama.cpp tag/branch
+        default: v0.6.0
+        required: false
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout llama.cpp
+        uses: actions/checkout@v4
+        with:
+          repository: ggml-org/llama.cpp
+          ref: ${{ inputs.ref || 'v0.6.0' }}
+          submodules: false
+
+      - name: Setup Android NDK
+        uses: nttld/setup-ndk@v1
+        id: ndk
+        with:
+          ndk-version: r27
+          local-cache: true
+
+      - name: Configure (arm64, static STL, no native)
+        run: |
+          cmake -B build-android \
+            -DCMAKE_TOOLCHAIN_FILE=${{ steps.ndk.outputs.ndk-path }}/build/cmake/android.toolchain.cmake \
+            -DANDROID_ABI=arm64-v8a \
+            -DANDROID_PLATFORM=android-28 \
+            -DANDROID_STL=c++_static \
+            -DGGML_NATIVE=OFF \
+            -DGGML_CPU_ALL_VARIANTS=ON \
+            -DLLAMA_BUILD_TESTS=OFF \
+            -DLLAMA_BUILD_EXAMPLES=OFF \
+            -DLLAMA_BUILD_SERVER=ON \
+            -DGGML_VULKAN=OFF \
+            -DCMAKE_BUILD_TYPE=Release
+          cmake --build build-android --target llama-server llama-cli -j $(nproc)
+
+      - name: Package
+        run: |
+          mkdir -p out
+          cp build-android/bin/llama-server build-android/bin/llama-cli out/ 2>/dev/null || \
+            find build-android -name 'llama-server' -exec cp {} out/ \;
+          find build-android -name 'llama-cli' -exec cp {} out/ \;
+          ls -lh out/
+          file out/* || true
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: llama-android-arm64
+          path: out/
+          retention-days: 30
