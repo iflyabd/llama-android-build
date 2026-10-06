@@ -50,8 +50,8 @@ jobs:
           cp build-android/bin/llama-server build-android/bin/llama-cli out/ 2>/dev/null || \
             find build-android -name 'llama-server' -exec cp {} out/ \;
           find build-android -name 'llama-cli' -exec cp {} out/ \;
+          find build-android -name '*.so' -exec cp {} out/ \;
           ls -lh out/
-          file out/* || true
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
