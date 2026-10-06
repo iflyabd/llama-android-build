@@ -23,8 +23,10 @@ jobs:
       - name: Setup Android NDK r27
         uses: android-actions/setup-android@v3
       - run: |
-          sdkmanager --install "ndk;r27" 2>&1 | tail -1
-          echo "NDK_PATH=$ANDROID_SDK_ROOT/ndk/r27" >> $GITHUB_ENV
+          yes | sdkmanager --licenses >/dev/null 2>&1 || true
+          sdkmanager --install "ndk;27.0.12077973" 2>&1 | tail -1
+          echo "NDK_PATH=$ANDROID_SDK_ROOT/ndk/27.0.12077973" >> $GITHUB_ENV
+          ls "$ANDROID_SDK_ROOT/ndk/27.0.12077973/toolchains/llvm/prebuilt/linux-x86_64/bin/clang"
 
       - name: Configure (arm64, static STL, no native)
         run: |
