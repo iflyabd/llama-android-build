@@ -20,17 +20,16 @@ jobs:
           ref: ${{ inputs.ref || 'v0.6.0' }}
           submodules: false
 
-      - name: Setup Android NDK
-        uses: nttld/setup-ndk@v1
-        id: ndk
-        with:
-          ndk-version: r27
-          local-cache: true
+      - name: Setup Android NDK r27
+        uses: android-actions/setup-android@v3
+      - run: |
+          sdkmanager --install "ndk;r27" 2>&1 | tail -1
+          echo "NDK_PATH=$ANDROID_SDK_ROOT/ndk/r27" >> $GITHUB_ENV
 
       - name: Configure (arm64, static STL, no native)
         run: |
           cmake -B build-android \
-            -DCMAKE_TOOLCHAIN_FILE=${{ steps.ndk.outputs.ndk-path }}/build/cmake/android.toolchain.cmake \
+            -DCMAKE_TOOLCHAIN_FILE=$NDK_PATH/build/cmake/android.toolchain.cmake \
             -DANDROID_ABI=arm64-v8a \
             -DANDROID_PLATFORM=android-28 \
             -DANDROID_STL=c++_static \
