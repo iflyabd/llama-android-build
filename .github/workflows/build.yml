@@ -20,13 +20,12 @@ jobs:
           ref: ${{ inputs.ref || 'v0.6.0' }}
           submodules: false
 
-      - name: Setup Android NDK r27
-        uses: android-actions/setup-android@v3
-      - run: |
-          yes | sdkmanager --licenses >/dev/null 2>&1 || true
-          sdkmanager --install "ndk;27.0.12077973" 2>&1 | tail -1
-          echo "NDK_PATH=$ANDROID_SDK_ROOT/ndk/27.0.12077973" >> $GITHUB_ENV
-          ls "$ANDROID_SDK_ROOT/ndk/27.0.12077973/toolchains/llvm/prebuilt/linux-x86_64/bin/clang"
+      - name: Fetch Android NDK r27d (direct zip, no sdkmanager)
+        run: |
+          curl -sL -o /tmp/ndk.zip https://dl.google.com/android/repository/android-ndk-r27d-linux.zip
+          unzip -q /tmp/ndk.zip -d /tmp && rm /tmp/ndk.zip
+          echo "NDK_PATH=/tmp/android-ndk-r27d" >> $GITHUB_ENV
+          ls /tmp/android-ndk-r27d/toolchains/llvm/prebuilt/linux-x86_64/bin/clang
 
       - name: Configure (arm64, static STL, no native)
         run: |
